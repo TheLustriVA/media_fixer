@@ -1,2 +1,21 @@
 .aider*
 .env
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.coverage
+
+# Virtual Environment
+venv/
+ENV/
+
+# Logs and queues
+*.log
+mediafixer_queue.*
+
+# IDE
+.vscode/
+.idea/
