@@ -56,9 +56,9 @@ def test_queue_manager_pop_from_queue(queue_manager):
 
 @patch('pymediainfo.MediaInfo.parse')
 def test_analyze_video_success(mock_parse, media_fixer):
-    mock_general = Mock(format='MP4')
-    mock_video = Mock(format='H264', height='1080')
-    mock_parse.return_value.tracks = [mock_general, mock_video]
+    mock_general = Mock(track_type="General", format='MP4')
+    mock_video = Mock(track_type="Video", format='H264', height=1080)
+    mock_parse.return_value = Mock(tracks=[mock_general, mock_video])
     
     result, needs_container, needs_encode, needs_resize = media_fixer.analyze_video("test.mp4")
     assert result == 1
@@ -68,9 +68,9 @@ def test_analyze_video_success(mock_parse, media_fixer):
 
 @patch('pymediainfo.MediaInfo.parse')
 def test_analyze_video_no_changes_needed(mock_parse, media_fixer):
-    mock_general = Mock(format='Matroska')
-    mock_video = Mock(format='AV1', height='720')
-    mock_parse.return_value.tracks = [mock_general, mock_video]
+    mock_general = Mock(track_type="General", format='Matroska')
+    mock_video = Mock(track_type="Video", format='AV1', height=720)
+    mock_parse.return_value = Mock(tracks=[mock_general, mock_video])
     
     result, needs_container, needs_encode, needs_resize = media_fixer.analyze_video("test.mkv")
     assert result == 2
@@ -79,11 +79,15 @@ def test_analyze_video_no_changes_needed(mock_parse, media_fixer):
     assert not needs_resize
 
 @patch('subprocess.run')
-def test_process_video_success(mock_run, media_fixer, tmp_path):
+@patch('shutil.copy2')
+@patch('pathlib.Path')
+def test_process_video_success(mock_path, mock_copy, mock_run, media_fixer, tmp_path):
     test_file = tmp_path / "test.mp4"
     test_file.write_text("")
     
     mock_run.return_value.returncode = 0
+    mock_path.return_value.exists.return_value = True
+    mock_path.return_value.rename.return_value = True
     
     assert media_fixer.process_video(str(test_file), True, True, True)
 
