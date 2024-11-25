@@ -2,7 +2,7 @@ import os
 import pathlib
 import pytest
 from unittest.mock import Mock, patch, mock_open
-from media_fixer import MediaFixer, QueueManager, ConversionConfig
+from media_fixer import MediaFixer, QueueManager, ConversionConfig, main
 
 @pytest.fixture
 def media_fixer():
