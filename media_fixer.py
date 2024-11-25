@@ -63,6 +63,8 @@ class QueueManager:
     def get_queue_length(self, queue_name: str) -> int:
         """Get number of entries in specified queue"""
         try:
+            if queue_name not in self.queues:
+                return 0
             with open(self.queues[queue_name]) as f:
                 return sum(1 for _ in f)
         except FileNotFoundError:

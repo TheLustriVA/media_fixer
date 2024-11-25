@@ -171,8 +171,13 @@ def test_main_function():
     with patch('sys.argv', test_args):
         with patch('media_fixer.MediaFixer') as mock_fixer:
             with patch('media_fixer.QueueManager'):
-                main()
-                mock_fixer.assert_called_once()
+                with patch('os.path.exists', return_value=True):
+                    with patch('os.makedirs'):
+                        try:
+                            main()
+                        except SystemExit as e:
+                            assert e.code == 0
+                        mock_fixer.assert_called_once()
 
 @patch('builtins.input')
 def test_interactive_mode(mock_input, media_fixer, tmp_path):
@@ -248,8 +253,14 @@ def test_cleanup_operations(media_fixer, tmp_path):
     """Test cleanup of temporary files"""
     test_temp = tmp_path / "test.mediafixer_working"
     test_temp.write_text("")
-    
+        
     queue_manager = QueueManager(str(tmp_path))
     with patch('sys.argv', ['media_fixer.py', '-s']):
-        main()
+        with patch('os.path.exists', return_value=True):
+            with patch('os.makedirs'):
+                try:
+                    main()
+                except SystemExit as e:
+                    assert e.code == 0
+                assert not test_temp.exists()
         assert not test_temp.exists()
