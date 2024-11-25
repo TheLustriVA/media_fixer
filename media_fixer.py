@@ -93,14 +93,28 @@ class MediaFixer:
             
         # Initialize configuration from environment or defaults
         self.config = ConversionConfig(
+            # Container settings
             container=os.environ.get('MEDIAFIXER_CONTAINER', 'Matroska'),
             container_extension=os.environ.get('MEDIAFIXER_CONTAINER_EXTENSION', 'mkv'),
+            
+            # Video settings
             video_codec=os.environ.get('MEDIAFIXER_VIDEO_CODEC', 'AV1'),
             video_width=int(os.environ.get('MEDIAFIXER_VIDEO_WIDTH', '1280')),
             video_height=int(os.environ.get('MEDIAFIXER_VIDEO_HEIGHT', '720')),
-            ffmpeg_extra_opts=os.environ.get('MEDIAFIXER_FFMPEG_EXTRA_OPTS', '-fflags +genpts'),
-            ffmpeg_encode=os.environ.get('MEDIAFIXER_FFMPEG_ENCODE', '-c:v libsvtav1 -crf 38'),
-            ffmpeg_resize=os.environ.get('MEDIAFIXER_FFMPEG_RESIZE', '-vf scale=${VIDEO_WIDTH}:${VIDEO_HEIGHT}')
+            
+            # FFmpeg settings
+            ffmpeg_extra_opts=os.environ.get('MEDIAFIXER_FFMPEG_EXTRA_OPTS', 
+                '-fflags +genpts -nostdin -find_stream_info'),
+            
+            # Encoding settings with expanded options
+            ffmpeg_encode=os.environ.get('MEDIAFIXER_FFMPEG_ENCODE', 
+                '-c:v libsvtav1 -crf 38 -preset 8 -g 240 -pix_fmt yuv420p ' + 
+                '-map 0 -map -0:d -c:a copy -c:s copy'),
+            
+            # Resize settings with variable interpolation
+            ffmpeg_resize=os.environ.get('MEDIAFIXER_FFMPEG_RESIZE', 
+                '-vf "scale=${VIDEO_WIDTH}:${VIDEO_HEIGHT}:flags=lanczos,' +
+                'format=yuv420p"')
         )
         
         self.logger = logging.getLogger('MediaFixer')
@@ -228,22 +242,41 @@ class MediaFixer:
 
     def _encode_video(self, filepath: pathlib.Path, 
                      needs_encode: bool, needs_resize: bool) -> bool:
-        """Encode/resize video"""
+        """Encode/resize video with enhanced FFmpeg control"""
         try:
             if self.test_only:
                 return True
                 
             output = filepath.with_name(f"{filepath.stem}.encoded.{self.config.container_extension}")
             
-            cmd = [self.ffmpeg_exe, "-fflags", "+genpts", "-nostdin", 
-                  "-i", str(filepath)]
+            # Base command with input
+            cmd = [self.ffmpeg_exe]
+            cmd.extend(self.config.ffmpeg_extra_opts.split())
+            cmd.extend(["-i", str(filepath)])
             
+            # Handle encoding options
             if needs_encode:
-                cmd.extend(self.config.ffmpeg_encode.split())
+                # Replace variables in encoding options
+                encode_opts = self.config.ffmpeg_encode.replace(
+                    "${VIDEO_CODEC}", self.config.video_codec
+                )
+                cmd.extend(encode_opts.split())
+            else:
+                # Copy video stream if no encoding needed
+                cmd.extend(["-c:v", "copy"])
+            
+            # Handle resize options
             if needs_resize:
-                cmd.extend(self.config.ffmpeg_resize.split())
-                
+                # Replace variables in resize options
+                resize_opts = self.config.ffmpeg_resize
+                resize_opts = resize_opts.replace("${VIDEO_WIDTH}", str(self.config.video_width))
+                resize_opts = resize_opts.replace("${VIDEO_HEIGHT}", str(self.config.video_height))
+                cmd.extend(resize_opts.split())
+            
+            # Output file
             cmd.append(str(output))
+            
+            self.logger.debug(f"FFmpeg command: {' '.join(cmd)}")
             
             result = subprocess.run(cmd, capture_output=True, text=True)
             
