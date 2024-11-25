@@ -258,22 +258,17 @@ class MediaFixer:
             
             # Handle encoding options
             if needs_encode:
-                # Replace variables in encoding options
-                encode_opts = self.config.ffmpeg_encode.replace(
-                    "${VIDEO_CODEC}", self.config.video_codec
-                )
-                cmd.extend(encode_opts.split())
+                cmd.extend(["-c:v", "libx264"])  # Use H.264 instead of AV1
+                cmd.extend(["-crf", "23"])  # Standard quality
             else:
-                # Copy video stream if no encoding needed
                 cmd.extend(["-c:v", "copy"])
             
             # Handle resize options
             if needs_resize:
-                # Replace variables in resize options
-                resize_opts = self.config.ffmpeg_resize
-                resize_opts = resize_opts.replace("${VIDEO_WIDTH}", str(self.config.video_width))
-                resize_opts = resize_opts.replace("${VIDEO_HEIGHT}", str(self.config.video_height))
-                cmd.extend(resize_opts.split())
+                cmd.extend(["-vf", f"scale={self.config.video_width}:{self.config.video_height}"])
+            
+            # Add common options
+            cmd.extend(["-c:a", "copy", "-c:s", "copy"])
             
             # Output file
             cmd.append(str(output))
