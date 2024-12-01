@@ -9,7 +9,7 @@ MEDIAINFO_EXE=$(which mediainfo)
 # where is your "ffmpeg" executable
 FFMPEG_EXE=$(which ffmpeg)
 CP_EXE=$(which cp)
-MV_EXE=$(which mv)
+MV_EXE=$(which mv)Yes
 RM_EXE=$(which rm)
 
 

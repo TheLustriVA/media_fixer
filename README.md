@@ -11,18 +11,19 @@ Media Fixer is a **bash script** that aims at perform the same task, but from th
 Media Fixer has been tested on Linux only. It could work on Windows (WSL) or MacOS, but please do not open tickets or request assistance on anything but Linux.
 
 You need to have the following installed on your system:
-- https://ffmpeg.org/ (it's used under the hood for all conversions and encodings it's mandatory)
-- https://github.com/MediaArea/MediaInfo (it's required to scan existing video files to detect if they need conversion or encoding or not)
+
+- <https://ffmpeg.org/> (it's used under the hood for all conversions and encodings it's mandatory)
+- <https://github.com/MediaArea/MediaInfo> (it's required to scan existing video files to detect if they need conversion or encoding or not)
 - Basic linux tools (mv, rm, cp, cat...)
 
 ## Installation
 
 Clone the repository and run the script, it's that simple.
 
-
 ## Usage
 
 Running the script will prompt you the  usage instructions. The list of accepter options are:
+
 - `-l logile`: full path to logfile. Optional. Default is mediafixer.log in current folder
 - `-q queue_path`: path to folder where queue files will be created. Optional. Default is current folder
 - `-r prefix`: a prefix for the queue filesnames. Optional. Default is empty
@@ -42,29 +43,32 @@ Running the script will prompt you the  usage instructions. The list of accepter
 Media Fixer will scan a path and build a list of queue files.
 
  The queue files are the following:
+
 - [queue-path/]prefix]mediafixer_queue.skipped     = store list of videos that don't need to be processed
 - [queue-path/]prefix]mediafixer_queue.failed      = store list of videos that failed conversion
 - [queue-path/]prefix]mediafixer_queue.completed   = store list of videos successfully converted
 - [queue-path/]prefix]mediafixer_queue.in_progress = store list of videos under process
 - [queue-path/]prefix]mediafixer_queue.leftovers   = list of temporary files that you should delete
-- 
+
  Upon start, if the in_progress queue is not empty, it will be used without re-scanning
  all the videos. If you want to force a full rescan, use the -f option, in this case all the queue files will be deleted before proceeding.
 
 ## How it works
 
-The script will first scan the path (either the current path with `-a` or a custom path with `-p` flags) for all contained video files, 
+The script will first scan the path (either the current path with `-a` or a custom path with `-p` flags) for all contained video files,
 then parse each video file it found to verify if it matches the requested video container, video codec, and video size (width x height).
 
 The filenames of the videos are then sorted out in the queue files (see above), so that any subsequent run of the script will not perform the
 scan & analyze phase again (unless you specify the `-f` flag):
+
 - Any video that is already in the request format and size: it's filename goes into the skipped queue
 - Any video that needs any kind of processing, will have it's filename placed in the in_progress queue (with some details of what needs to be done)
 - Any video file that fails to analyze will have it's filename placed in the failed queue
 - Any stale temporary file found, will have it's filename stored in the leftovers queue, unless the `-d` flag is specified.
 
-After the scanning and analysis phase is complete, the script will start converting all the video files which are in the in_progress queue. 
+After the scanning and analysis phase is complete, the script will start converting all the video files which are in the in_progress queue.
 There are three different operations possible:
+
 - replace the container (from AVI ro MKV, for example)
 - Encoding to a different CODEC (from x264 to AV1 for example)
 - Resizing (from 1080p to 720p for example)
@@ -97,23 +101,17 @@ Selecting the best container is not trivial, because not all CODECS and formats 
 
 ### Encoding
 
-Encoding is done at the same time of resizing. This is usually a **loss** conversion and it's better done only once for a video. You should download directly the videos in the codec you prefer to avoid consumning encoding operations and loss of video quality. You usually want to recode in a different codec when you aim at consistency for streaming, or to save significant disk real estate. 
+Encoding is done at the same time of resizing. This is usually a **loss** conversion and it's better done only once for a video. You should download directly the videos in the codec you prefer to avoid consumning encoding operations and loss of video quality. You usually want to recode in a different codec when you aim at consistency for streaming, or to save significant disk real estate.
 
 By default GPUs will**not** be used, because they are meant for streaming and not storing, creating worse output that CPU based encoding. If you need GPU encoding, you should maunally change your ffmpeg options with the environment variables above.
 
 ### Resizing
 
-Resizing is done when the original video is not in the requested size. 
+Resizing is done when the original video is not in the requested size.
 
 Since it make no sense to resize upward, from a smaller video resolution to a bigger one, Media Fixer will **not** resize a smaller video to a bigger size. At the same time, any resising wull never change the aspect ratio of the video. The resizing is focused on the y-resolution (1080p, 720p, 480p, etc) for this reason. If you need to alter the aspect ratio, you need to cusotmize your ffmpeg options with the environment variables above.
 
-
-
-
 ----
 
-Media Fixer has been developed by Willy Gardiol, it's provided under the GPLv3 License. https://www.gnu.org/licenses/gpl-3.0.html
-Media Fixer is publicly available at: https://github.com/gardiol/media_fixer
-
-
-
+Media Fixer has been developed by Willy Gardiol, it's provided under the GPLv3 License. <https://www.gnu.org/licenses/gpl-3.0.html>
+Media Fixer is publicly available at: <https://github.com/gardiol/media_fixer>

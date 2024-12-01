@@ -19,3 +19,5 @@ mediafixer_queue.*
 # IDE
 .vscode/
 .idea/
+media_fixer.sh
+README.md
